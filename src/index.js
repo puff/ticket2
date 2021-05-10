@@ -130,21 +130,50 @@ traverse(ast, {
 console.log("Un-shifting decoded string array...".cyan)
 traverse(ast, {
     FunctionExpression(path) {
-
+        const parent = path.getStatementParent()
+        if (types.isVariableDeclaration(parent)) {
+            const funcParent = parent.getFunctionParent()
+            if (types.isFunctionExpression(funcParent)) {
+                const propParent = funcParent.parentPath.parentPath
+                if (types.isObjectProperty(propParent) && propParent.node.key.name === stringFunction) {
+                    path.node.body.body.pop()
+                    if (path.node.body.body.length > 0 && path.node.body.body.every(_ins => types.isIfStatement(_ins))) {
+                        for (const _if of path.node.body.body) {
+                           const expression = _if.consequent.body[0].expression.arguments[1],
+                                uFirst = expression.callee.object.arguments,
+                                uSecond = expression.arguments
+                                
+                            let first = [generate(uFirst[0]).code, generate(uFirst[1]).code],
+                                second = [generate(uSecond[0]).code, generate(uSecond[1]).code]
+                                
+                            decodedStrings.unshift.apply(decodedStrings, decodedStrings.splice(first[0], first[1]).splice(second[0], second[1]))
+                       }
+                       console.log(JSON.stringify(decodedStrings))
+                    }
+                }
+            }
+        }
     }
 })
 
+// TODO: Begin Variable Un-masking
+
 console.log('Beautifying...'.cyan)
 traverse(ast, {
+    CallExpression(path) {
+      if (types.isMemberExpression(path.node.callee) && stringResolvers.includes(path.node.callee.property.name)) {
+          path.replaceWith(types.stringLiteral(decodedStrings[path.node.arguments[0].value]))
+      }  
+    },
     StringLiteral(path) {
-        // Unescape hexadecimal & unicode strings
-        delete path.node.extra.raw
+        if (path.node.extra != undefined)
+            delete path.node.extra.raw
     },
     MemberExpression(path) {
         if(types.isStringLiteral(path.node.property) && validIdentifierRegex.test(path.node.property.value)) {
             path.replaceWith(types.memberExpression(path.node.object, types.identifier(path.node.property.value), false));
         }
-    },
+    }
 })
 
 let code = generate(ast, {}, source).code
