@@ -6,9 +6,9 @@
   "license": "AGPL-3.0-or-later",
   "repository": "git@github.com:puff/ticket",
   "scripts": {
-    "convert": "node src/convert-states.js samples/ticket-og-unmasked.js",
+    "convert": "node src/convert-states.js samples/ticket-unmask.js",
     "fc": "node src/index.js samples/funcaptcha.js",
-    "ticket": "node src/index.js samples/ticket-og-unmasked-convert-switch.js"
+    "ticket": "node src/index.js samples/ticket-unmask-convert-simplify.js"
   },
   "dependencies": {
     "@babel/generator": "^7.13.16",
