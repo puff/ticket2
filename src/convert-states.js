@@ -39,7 +39,7 @@ let end,
 
 traverse(ast, {
     ForStatement(path)
-    {
+    { //return
         let node = path.node,
             prev = path.getPrevSibling(),
             stateHolder,
@@ -202,6 +202,24 @@ traverse(ast, {
                 }
             }
         }
+    }
+})
+
+// TODO: Add this to beautifying routine in index.js
+console.log('Evaluating constants...'.cyan)
+traverse(ast, {
+    BinaryExpression(path) {
+        let code = generate(path.node).code
+        if (/[a-zA-Z]/.test(code))
+            return
+        
+        let evaluated = eval(code)
+        if (evaluated != undefined)
+            path.replaceWith(types.valueToNode(evaluated))
+    },
+    UnaryExpression(path) {
+        if (path.node.operator === '+' && types.isStringLiteral(path.node.argument))
+            path.replaceWith(types.NumericLiteral(parseInt(path.node.argument.value)))
     }
 })
 
