@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Unmask",
+            "request": "launch",
+            "runtimeArgs": [
+                "unmask"
+            ],
+            "runtimeExecutable": "yarn",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "outputCapture": "std",
+            "type": "pwa-node"
+        },
+        {
             "name": "Convert",
             "request": "launch",
             "runtimeArgs": [
@@ -14,6 +27,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
+            "outputCapture": "std",
             "type": "pwa-node"
         },
         {
@@ -26,6 +40,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
+            "outputCapture": "std",
             "type": "pwa-node"
         }
     ]

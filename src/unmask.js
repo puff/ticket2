@@ -24,7 +24,6 @@ const source = fs.readFileSync(filePath, 'utf8'),
     
 console.log('Finding variable mask arrays...'.cyan)
 let maskHolders = {}
-
 traverse(ast, {
     AssignmentExpression(path) {
         const node = path.node
@@ -40,13 +39,30 @@ traverse(ast, {
             maskHolders[name] = {}
             
         //if (maskHolders[name][index])
-        if (node.operator == '=')
+        if (node.operator == '=') {
             maskHolders[name][index] = node.right.value
-        else if (node.operator == '+=')
+            path.node.right = types.valueToNode(node.right.value)
+        }
+        else if (node.operator == '+=') {
             maskHolders[name][index] += node.right.value
+            path.node.right = types.valueToNode(maskHolders[name][index])
+            path.node.operator = '='
+        }
         else
             console.log(name, index, node.operator)
         
+        // let prev = path.getPrevSibling()
+        // console.log(prev.type)
+        // path.stop()
+        // return
+
+        // if (types.isAssignmentExpression(prev) && types.isMemberExpression(prev.left) && 
+        //     prev.left.object.name == name && (
+		// 	(types.isIdentifier(prev.left.property) && prev.left.property.name == index) || 
+		// 	(types.isNumericLiteral(prev.left.property) && prev.left.property.value == index))) {
+        //         prev.remove()
+        //     }
+
         //path.remove()
         //maskHolders[name].push({index: node.left.property.value, value: node.right.value})
     }
@@ -73,16 +89,20 @@ traverse(ast, {
 			
 			if (!valKeys.includes(keyName))
 				return
-				
-			//console.log(keyName)
-			
-			if (types.isAssignmentExpression(expression) && types.isMemberExpression(expression.left) && 
-				maskHolders[expression.left.object.name] && (
-				(types.isIdentifier(expression.left.property) && expression.left.property.name == keyName) || 
-				(types.isNumericLiteral(expression.left.property) && expression.left.property.value == keyName))) {
-					prev.remove()
-					return
-				}
+							
+            if (types.isAssignmentExpression(expression) && types.isMemberExpression(expression.left) && 
+                maskHolders[expression.left.object.name] && (
+                (types.isIdentifier(expression.left.property) && expression.left.property.name == keyName) || 
+                (types.isNumericLiteral(expression.left.property) && expression.left.property.value == keyName))) {
+                    //prev.remove()
+                    return
+            }
+            else if (types.isUpdateExpression(expression) && types.isMemberExpression(expression.argument) &&
+                maskHolders[expression.argument.object.name] && (
+                (types.isIdentifier(expression.argument.property) && expression.argument.property.name == keyName) || 
+                (types.isNumericLiteral(expression.argument.property) && expression.argument.property.value == keyName))) {
+                    return
+                }
             
 			path.replaceWith(types.valueToNode(maskHolders[node.object.name][keyName]))
 		}
