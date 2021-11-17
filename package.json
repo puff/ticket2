@@ -7,7 +7,7 @@
   "repository": "git@github.com:puff/ticket",
   "scripts": {
     "convert": "node src/convert-states.js samples/ticket-unmask.js",
-    "fc": "node src/index.js samples/funcaptcha.js",
+    "unmask": "node src/unmask.js samples/ticket-unmask-convert-simplify-cleaned-unmask.js",
     "ticket": "node src/index.js samples/ticket-unmask-convert-simplify.js"
   },
   "dependencies": {

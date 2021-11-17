@@ -204,31 +204,31 @@ traverse(ast, {
     }
 })
 
-// TODO: Add this to beautifying routine in index.js
-console.log('Evaluating constants...'.cyan)
-traverse(ast, {
-    BinaryExpression(path) {
-        let code = generate(path.node).code
-        if (/[a-zA-Z]/.test(code))
-            return
+// // TODO: Add this to beautifying routine in index.js
+// console.log('Evaluating constants...'.cyan)
+// traverse(ast, {
+//     BinaryExpression(path) {
+//         let code = generate(path.node).code
+//         if (/[a-zA-Z]/.test(code))
+//             return
         
-        let evaluated = eval(code)
-        if (evaluated != undefined)
-            path.replaceWith(types.valueToNode(evaluated))
-    },
-    UnaryExpression(path) {
-        if (types.isStringLiteral(path.node.argument)) {
-            if (path.node.operator === '+')
-                path.replaceWith(types.NumericLiteral(parseInt(path.node.argument.value)))
+//         let evaluated = eval(code)
+//         if (evaluated != undefined)
+//             path.replaceWith(types.valueToNode(evaluated))
+//     },
+//     UnaryExpression(path) {
+//         if (types.isStringLiteral(path.node.argument)) {
+//             if (path.node.operator === '+')
+//                 path.replaceWith(types.NumericLiteral(parseInt(path.node.argument.value)))
             
-        } else if (types.isUnaryExpression(path.node.argument)) {
-            if (path.node.operator === '-' && path.node.argument.operator === '+') {
-                path.replaceWith(types.NumericLiteral(-parseInt(path.node.argument.argument.value)))
-            }
-        }
+//         } else if (types.isUnaryExpression(path.node.argument)) {
+//             if (path.node.operator === '-' && path.node.argument.operator === '+') {
+//                 path.replaceWith(types.NumericLiteral(-parseInt(path.node.argument.argument.value)))
+//             }
+//         }
 
-    }
-})
+//     }
+// })
 
 console.log(`Finished routines! Total time taken: ${Date.now() - beginTime}ms`.brightYellow)
 
