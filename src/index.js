@@ -138,13 +138,14 @@ traverse(ast, {
             // }
 
             decodedStrings = stringArrayString.split(stringArraySeparator) // decodedStrings.split
-            //fs.writeFileSync("strings.json", JSON.stringify(decodedStrings))
+            // fs.writeFileSync("strings.json", JSON.stringify(decodedStrings))
             path.stop()
         }
     }
 })
 
-console.log("Un-shifting decoded string array...".cyan)
+unshiftMap = []
+console.log("Creating un-shift map for decoded strings...".cyan)
 traverse(ast, {
     FunctionExpression(path) {
         const parent = path.getStatementParent()
@@ -153,25 +154,32 @@ traverse(ast, {
             if (types.isFunctionExpression(funcParent)) {
                 const propParent = funcParent.parentPath.parentPath
                 if (types.isObjectProperty(propParent) && propParent.node.key.name === stringFunction) {
-                    path.node.body.body.pop()
+                    // path.node.body.body.pop()
                     if (path.node.body.body.length > 0 && path.node.body.body.every(_ins => types.isIfStatement(_ins))) {
+                        // let indexArg = path.node.params[0].name
                         for (const _if of path.node.body.body) {
                            const expression = _if.consequent.body[0].expression.arguments[1],
                                 uFirst = expression.callee.object.arguments,
                                 uSecond = expression.arguments
                             
-                            let first = [generate(uFirst[0]).code, generate(uFirst[1]).code],
-                                second = [generate(uSecond[0]).code, generate(uSecond[1]).code]
-                                
-                            decodedStrings.unshift.apply(decodedStrings, decodedStrings.splice(first[0], first[1]).splice(second[0], second[1]))
+                            // TODO: make this dynamic. currently, this only works if the if statement is in the following format: if (count == 0 && index == 619)
+                            //       also, this only works if the if statements are in least to greatest order of the count
+                            //       and finally, it also only works if the unshiftMap index is increased by a static amount (1) every time
+                            //       see o0F in examples (used in p0F function)
+                            unshiftMap[_if.test.left.right.value] = {
+                                index: _if.test.right.right.value,
+                                first: [generate(uFirst[0]).code, generate(uFirst[1]).code],
+                                second: [generate(uSecond[0]).code, generate(uSecond[1]).code]
+                            }
                        }
+                       path.stop()
+                       return
                     }
                 }
             }
         }
     }
 })
-
 
 // TODO: Unmask evals (partially done in pooky)
 
@@ -200,11 +208,11 @@ traverse(ast, {
                 path.replaceWith(types.NumericLiteral(-parseInt(path.node.argument.argument.value)))
             }
         }
-
     }
 })
 
-let decodedStringCount = 0
+let decodedStringCount = 0,
+    unshiftCount = 0
 console.log('Replacing obfuscated strings and beautifying...'.cyan)
 traverse(ast, {
     CallExpression(path) {
@@ -218,6 +226,14 @@ traverse(ast, {
           else if (typeof val === 'string')
             val = parseInt(val)
 
+        // TODO: see notes in unshiftMap creation
+        let unshift = unshiftMap[unshiftCount]
+        if (unshift && unshift.index == val) {
+            console.log(`Unshifted decoded strings array #${unshiftCount}`.green)
+            decodedStrings.unshift.apply(decodedStrings, decodedStrings.splice(unshift.first[0], unshift.first[1]).splice(unshift.second[0], unshift.second[1]))
+            fs.writeFileSync(`./samples/strings_decoded/strings_${unshiftCount}.json`, JSON.stringify(decodedStrings))
+            unshiftCount++
+        }
           //console.log(val, decodedStrings[val])
           path.replaceWith(types.stringLiteral(decodedStrings[val]))
           decodedStringCount++;

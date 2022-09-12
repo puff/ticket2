@@ -94,7 +94,7 @@ traverse(ast, {
                 maskHolders[expression.left.object.name] && (
                 (types.isIdentifier(expression.left.property) && expression.left.property.name == keyName) || 
                 (types.isNumericLiteral(expression.left.property) && expression.left.property.value == keyName))) {
-                    //prev.remove()
+                    //prev.remove() // remove redudant expressions, only use on subsequent unmasks
                     return
             }
             else if (types.isUpdateExpression(expression) && types.isMemberExpression(expression.argument) &&
@@ -108,6 +108,14 @@ traverse(ast, {
 		}
 	}
 })
+
+// TODO: O0p[0][0] -> arguments[0] 
+//                O0p is [arguments], when index 0 is not set in maskHolders just set any reference to O0p[0] to arguments
+//                maybe resolve arguments to ones specified in function
+//                e.g. function a(s) { b = [arguments]; c = b[0][0]; d = b[0][1] } -> c = s /* arguments[0] */; d = arguments[1]
+
+
+console.log(maskHolders)
 
 console.log(`Finished routines! Total time taken: ${Date.now() - beginTime}ms`.brightYellow)
 
