@@ -26,6 +26,20 @@ const source = fs.readFileSync(filePath, 'utf8'),
 let stringObject, stringProperty, stringFunction, stringArrayInitString, stringArrayString, stringArrayHolder,
     stringArraySeparator, decodedStrings = '', stringResolvers = [], possibleStringArrayFunctions = []
 
+// TODO: Unmask evals (partially done in pooky)
+
+// TODO: Unmask variables
+
+function unmaskingStuff(removeRedundant)
+{
+    console.log("Unmasking")
+    const maskFunctions = require('./unmask')
+    let { maskHolders, constantMasks } = maskFunctions.getMaskHolders(ast)
+    console.log(maskHolders, constantMasks)
+    maskFunctions.unmask(ast, maskHolders, constantMasks)
+}
+unmaskingStuff(false)
+
 console.log('Finding string decode function and its resolver functions...'.cyan)
 traverse(ast, {
     VariableDeclarator(path) {
@@ -66,27 +80,30 @@ console.log(`String Resolver Functions | ${stringResolvers}`.green)
 console.log('Decoding string array...'.cyan)
 // Find string array functions and string array separator
 traverse(ast, {
-    VariableDeclaration(path) {
-        if (path.node.declarations && path.node.declarations.length === 2 &&
-            path.node.declarations[0].init && types.isStringLiteral(path.node.declarations[0].init) &&
-            path.node.declarations[0].init.value.length === 0 && path.node.declarations[1].init &&
-            types.isCallExpression(path.node.declarations[1].init) && path.node.declarations[1].init.arguments.length === 1 &&
-            types.isCallExpression(path.node.declarations[1].init.arguments[0]) && types.isCallExpression(path.node.declarations[1].init.arguments[0].callee) &&
-            path.node.declarations[1].init.arguments[0].callee.arguments.length === 1 && types.isArrayExpression(path.node.declarations[1].init.arguments[0].callee.arguments[0]) &&
-            path.node.declarations[1].init.arguments[0].callee.arguments[0].elements.every(n => types.isNumericLiteral(n) || (types.isUnaryExpression(n) && types.isNumericLiteral(n.argument)))
-        )
-            stringArrayHolder = path.node.declarations[0].id.name
-
-    },
-    CallExpression(path) {
-        if (types.isMemberExpression(path.node.callee) && path.node.callee.object &&
-            path.node.callee.object.name === stringArrayHolder && path.node.arguments.length === 1 &&
-            types.isStringLiteral(path.node.arguments[0])
-        ) {
-            stringArraySeparator = path.node.arguments[0].value
-            path.stop()
-        }
-    },
+    // TODO: fix this
+    // VariableDeclaration(path) {
+    //     if (path.node.declarations && path.node.declarations.length === 2 &&
+    //         path.node.declarations[0].init && types.isStringLiteral(path.node.declarations[0].init) &&
+    //         path.node.declarations[0].init.value.length === 0 && path.node.declarations[1].init &&
+    //         types.isCallExpression(path.node.declarations[1].init) && path.node.declarations[1].init.arguments.length === 1 &&
+    //         types.isCallExpression(path.node.declarations[1].init.arguments[0]) && types.isCallExpression(path.node.declarations[1].init.arguments[0].callee) &&
+    //         path.node.declarations[1].init.arguments[0].callee.arguments.length === 1 && types.isArrayExpression(path.node.declarations[1].init.arguments[0].callee.arguments[0]) &&
+    //         path.node.declarations[1].init.arguments[0].callee.arguments[0].elements.every(n => types.isNumericLiteral(n) || (types.isUnaryExpression(n) && types.isNumericLiteral(n.argument)))
+    //     ) {
+    //         stringArrayHolder = path.node.declarations[0].id.name
+    //         console.log(stringArrayHolder)
+    //     }
+    // },
+    // CallExpression(path) {
+    //     if (types.isMemberExpression(path.node.callee) && path.node.callee.object &&
+    //         path.node.callee.object.name === stringArrayHolder && path.node.arguments.length === 1 &&
+    //         types.isStringLiteral(path.node.arguments[0])
+    //     ) {
+    //         stringArraySeparator = path.node.arguments[0].value
+    //         // console.log(path.node)
+    //         path.stop()
+    //     }
+    // },
     AssignmentExpression(path) {
         // String array function names
         if (types.isIdentifier(path.node.right)) {
@@ -181,10 +198,6 @@ traverse(ast, {
     }
 })
 
-// TODO: Unmask evals (partially done in pooky)
-
-// TODO: Unmask variables
-
 // TODO: replace globalThis calls with window (ex: var d7D = d4ss.K5P; d7D.String.charCodeAt())
 
 console.log('Evaluating constants...'.cyan)
@@ -250,6 +263,33 @@ traverse(ast, {
     }
 })
 console.log(`Decoded ${decodedStringCount} strings`.green)
+
+//unmaskingStuff(true) // second iteration
+
+console.log('Evaluating constants...'.cyan)
+traverse(ast, {
+    BinaryExpression(path) {
+        let code = generate(path.node).code
+        if (/[a-zA-Z]/.test(code))
+            return
+        
+        let evaluated = eval(code)
+        if (evaluated != undefined)
+            path.replaceWith(types.valueToNode(evaluated))
+    },
+    UnaryExpression(path) {
+        if (types.isStringLiteral(path.node.argument)) {
+            if (path.node.operator === '+')
+                path.replaceWith(types.NumericLiteral(parseInt(path.node.argument.value)))
+            
+        } else if (types.isUnaryExpression(path.node.argument)) {
+            if (path.node.operator === '-' && path.node.argument.operator === '+') {
+                path.replaceWith(types.NumericLiteral(-parseInt(path.node.argument.argument.value)))
+            }
+        }
+
+    }
+})
 
 
 let code = generate(ast, {}, source).code
