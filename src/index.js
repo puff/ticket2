@@ -28,16 +28,17 @@ let stringObject, stringProperty, stringFunction, stringArrayInitString, stringA
 
 // TODO: Unmask evals (partially done in pooky)
 
-// TODO: Unmask variables
-
+// TODO: Make unmasking work with constants instead of only MemberExpressions (see  in samples)
+//       See d5p += I1Y.n0F(e2P ^ 0); and var e3s = v1Y.n0F(284); in samples
 function unmaskingStuff(removeRedundant)
 {
     console.log("Unmasking")
     const maskFunctions = require('./unmask')
-    let { maskHolders, constantMasks } = maskFunctions.getMaskHolders(ast)
-    console.log(maskHolders, constantMasks)
-    maskFunctions.unmask(ast, maskHolders, constantMasks)
+    let { maskHolders, constantMasks } = maskFunctions.getMaskHolders(ast, removeRedundant)
+    // console.log(maskHolders, constantMasks)
+    maskFunctions.unmask(ast, maskHolders, constantMasks, removeRedundant)
 }
+
 unmaskingStuff(false)
 
 console.log('Finding string decode function and its resolver functions...'.cyan)
@@ -264,7 +265,7 @@ traverse(ast, {
 })
 console.log(`Decoded ${decodedStringCount} strings`.green)
 
-//unmaskingStuff(true) // second iteration
+unmaskingStuff(true) // second iteration
 
 console.log('Evaluating constants...'.cyan)
 traverse(ast, {

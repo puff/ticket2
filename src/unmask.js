@@ -1,6 +1,5 @@
 #!/user/bin/env node
 
-// TODO: make this into a module, so it can be properly used before string unconcealing
 const colors = require('colors'),
     traverse = require('@babel/traverse').default,
     parse = require('@babel/parser').parse,
@@ -32,7 +31,7 @@ function isNumeric(str) {
            !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
   }
 
-function getMaskHolders(ast) {
+function getMaskHolders(ast, removeRedundant) {
     let maskHolders = {},
         constantMasks = {}
 
@@ -47,6 +46,7 @@ function getMaskHolders(ast) {
             // if (node.id.name in constantMasks)
             //     console.log(node.id.name)
             constantMasks[node.id.name] = node.init.value
+            if (removeRedundant) path.remove()
         },
         AssignmentExpression(path) {
             const node = path.node
@@ -55,6 +55,7 @@ function getMaskHolders(ast) {
             if (types.isIdentifier(node.left) && node.left.name in constantMasks && (types.isNumericLiteral(node.right) || 
                 (types.isStringLiteral(node.right) && isNumeric(node.right.value)))) {
                 constantMasks[node.left.name] = node.right.value
+                if (removeRedundant) path.remove()
             }
             
             if (!types.isMemberExpression(node.left) || !types.isIdentifier(node.left.object) ||
@@ -75,17 +76,20 @@ function getMaskHolders(ast) {
                 maskHolders[name] = {}
                 //if (c) console.log(name, index)
             //if (maskHolders[name][index])
-            if (node.operator == '=') {
-                maskHolders[name][index] = node.right.value
-                path.node.right = types.valueToNode(node.right.value)
+            // if (types.isStringLiteral(node.right))
+            {
+                if (node.operator == '=') {
+                    maskHolders[name][index] = node.right.value
+                    path.node.right = types.valueToNode(node.right.value)
+                }
+                else if (node.operator == '+=') {
+                    maskHolders[name][index] += node.right.value
+                    path.node.right = types.valueToNode(maskHolders[name][index])
+                    if (removeRedundant) path.node.operator = '='
+                }
+                else
+                    console.log(name, index, node.operator)
             }
-            else if (node.operator == '+=') {
-                maskHolders[name][index] += node.right.value
-                path.node.right = types.valueToNode(maskHolders[name][index])
-                path.node.operator = '='
-            }
-            else
-                console.log(name, index, node.operator)
             
             // let prev = path.getPrevSibling()
             // console.log(prev.type)
@@ -130,15 +134,29 @@ function unmask(ast, maskHolders, constantMasks, removeRedundant) {
                 if (!constant) {
                     let valKeys = Object.keys(maskHolders[node.object.name])
                     if (!valKeys.includes(keyName))
-                        return
+                        return 
                 } else if (!(keyName in constantMasks))
                     return
+                    
+                // resolve cases like d0p[E5f] to d0p[928]
+                if (constant)
+                {
+                    if (types.isAssignmentExpression(expression) && types.isMemberExpression(expression.left) && 
+                        maskHolders[expression.left.object.name] && types.isIdentifier(expression.left.property)) {
+                            //console.log(keyName)
+                            expression.left.property = types.valueToNode(constantMasks[keyName])
+                            return
+                    }
+
+                    //if ()
+                } 
                                 
                 if (types.isAssignmentExpression(expression) && types.isMemberExpression(expression.left) && 
                     maskHolders[expression.left.object.name] && (
                     (types.isIdentifier(expression.left.property) && expression.left.property.name == keyName) || 
                     (types.isNumericLiteral(expression.left.property) && expression.left.property.value == keyName))) {
                         if (removeRedundant) prev.remove() // remove redudant expressions, only use on subsequent unmasks
+                        //console.log(expression.left.object.name, keyName)
                         return
                 }
                 else if (types.isUpdateExpression(expression) && types.isMemberExpression(expression.argument) &&
@@ -146,10 +164,9 @@ function unmask(ast, maskHolders, constantMasks, removeRedundant) {
                     (types.isIdentifier(expression.argument.property) && expression.argument.property.name == keyName) || 
                     (types.isNumericLiteral(expression.argument.property) && expression.argument.property.value == keyName))) {
                         return
-                    }
-                
-                let real = constant ? constantMasks[keyName] : maskHolders[node.object.name][keyName]
-                path.replaceWith(types.valueToNode())
+                }
+
+                path.replaceWith(types.valueToNode(maskHolders[node.object.name][keyName]))
             }
         }
     })
