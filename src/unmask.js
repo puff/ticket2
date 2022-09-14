@@ -87,8 +87,8 @@ function getMaskHolders(ast, removeRedundant) {
                     path.node.right = types.valueToNode(maskHolders[name][index])
                     if (removeRedundant) path.node.operator = '='
                 }
-                else
-                    console.log(name, index, node.operator)
+                // else
+                //     console.log(name, index, node.operator) 
             }
             
             // let prev = path.getPrevSibling()
