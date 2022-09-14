@@ -28,8 +28,6 @@ let stringObject, stringProperty, stringFunction, stringArrayInitString, stringA
 
 // TODO: Unmask evals (partially done in pooky)
 
-// TODO: Make unmasking work with constants instead of only MemberExpressions (see  in samples)
-//       See d5p += I1Y.n0F(e2P ^ 0); and var e3s = v1Y.n0F(284); in samples
 function unmaskingStuff(removeRedundant)
 {
     console.log("Unmasking")
@@ -227,7 +225,7 @@ traverse(ast, {
 
 let decodedStringCount = 0,
     unshiftCount = 0
-console.log('Replacing obfuscated strings and beautifying...'.cyan)
+console.log('Replacing obfuscated strings...'.cyan)
 traverse(ast, {
     CallExpression(path) {
       if (types.isMemberExpression(path.node.callee) && stringResolvers.includes(path.node.callee.property.name) /* && path.node.arguments.length > 0 */) {
@@ -256,11 +254,6 @@ traverse(ast, {
     StringLiteral(path) { // Revert hexadecimal strings
         if (path.node.extra != undefined)
             delete path.node.extra.raw
-    },
-    MemberExpression(path) { // Bracket to dot notation (ex. navigator["plugins"] -> navigator.plugins)
-        if(types.isStringLiteral(path.node.property) && validIdentifierRegex.test(path.node.property.value)) {
-            path.replaceWith(types.memberExpression(path.node.object, types.identifier(path.node.property.value), false));
-        }
     }
 })
 console.log(`Decoded ${decodedStringCount} strings`.green)
@@ -288,10 +281,19 @@ traverse(ast, {
                 path.replaceWith(types.NumericLiteral(-parseInt(path.node.argument.argument.value)))
             }
         }
-
     }
 })
 
+// TODO: String merging (https://docs.jscrambler.com/code-integrity/documentation/transformations/string-splitting)
+
+console.log('Beautifying...'.cyan)
+traverse(ast, {
+    MemberExpression(path) { // Bracket to dot notation (ex. navigator["plugins"] -> navigator.plugins)
+        if(types.isStringLiteral(path.node.property) && validIdentifierRegex.test(path.node.property.value)) {
+            path.replaceWith(types.memberExpression(path.node.object, types.identifier(path.node.property.value), false));
+        }
+    }
+})
 
 let code = generate(ast, {}, source).code
 //code = beautify(code, {indent_size: 2, space_in_empty_paren: true})
