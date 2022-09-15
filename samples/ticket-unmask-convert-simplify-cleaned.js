@@ -30794,11 +30794,9 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
 
             if (u7o[783] === 0) {
               d0o[6] = new z033.Uint8Array(y0o[1].q3().length + 4);
-              d0o[9] = "16";
-              d0o[8] = "16";
 
               if (!h7u.f3 || o1Y.g3V()[4][10][8] != o1Y.l3V()[10][7][12]) {
-                d0o[2] = y0o[1].V3(d0o[9], d0o[8]), d0o[3] = (1, Y0o[6])(d0o[2], 2), d0o[5] = d0o[3][0], d0o[7] = d0o[3][1];
+                d0o[2] = y0o[1].V3("16", "16"), d0o[3] = (1, Y0o[6])(d0o[2], 2), d0o[5] = d0o[3][0], d0o[7] = d0o[3][1];
 
                 try {
                   d0o[78] = z033.WebGLRenderingContext.prototype.getParameter(37445);
@@ -32825,15 +32823,14 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
 
     function t0u(J1o, F1o, R1o) {
       var V8o = [arguments];
-      V8o[2] = "suspendedStart";
       return function Z5h(Q1o, O1o) {
         var m8o = [arguments];
 
-        if (V8o[2] === "executing" && P1Y.g3V()[11][2][2] == P1Y.g3V()[8][0][0]) {
+        if ("completed" === "executing" && P1Y.g3V()[11][2][2] == P1Y.g3V()[8][0][0]) {
           throw new B033("Generator is already running");
         }
 
-        if (P1Y.g3V()[0][11][4] == P1Y.l3V()[13][6][10] && V8o[2] === "completed") {
+        if (P1Y.g3V()[0][11][4] == P1Y.l3V()[13][6][10] && "completed" === "completed") {
           if (m8o[0][0] === "throw" && P1Y.l3V()[8][7][0] == P1Y.l3V()[10][2][10]) {
             throw m8o[0][1];
           }
@@ -32859,12 +32856,9 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
             } else {
               while (V8o[0][2].method === "next" && P1Y.g3V()[5][3][0] != P1Y.g3V()[6][12][0]) {
                 V8o[0][2].sent = V8o[0][2]._sent = V8o[0][2].arg;
-                V8o[2] = "executing";
                 m8o[19] = i0u(V8o[0][0], V8o[0][1], V8o[0][2]);
 
                 if (P1Y.g3V()[2][2][13][12] == P1Y.g3V()[1][13][8] && m8o[19].type === "normal") {
-                  V8o[2] = V8o[0][2].done && P1Y.g3V()[10][3][4][12] != P1Y.l3V()[7][8][10] ? "completed" : "suspendedYield";
-
                   if (P1Y.l3V()[11][11][0] != P1Y.l3V()[9][5][8] || m8o[19].arg === D8o[600]) {
                     continue;
                   } else {
@@ -32875,7 +32869,6 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
                   }
                 } else {
                   if (P1Y.g3V()[6][9][0] != P1Y.g3V()[6][6][9][8] || m8o[19].type === "throw") {
-                    V8o[2] = "completed";
                     V8o[0][2].method = "throw";
                     V8o[0][2].arg = m8o[19].arg;
                   }
@@ -32885,8 +32878,7 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
               }
 
               if (P1Y.g3V()[1][3][4] != P1Y.l3V()[7][0][8][10] && V8o[0][2].method === "throw") {
-                if (P1Y.l3V()[11][12][6] != P1Y.g3V()[1][11][10] || V8o[2] === "suspendedStart") {
-                  V8o[2] = "completed";
+                if (P1Y.l3V()[11][12][6] != P1Y.g3V()[1][11][10] || "completed" === "suspendedStart") {
                   throw V8o[0][2].arg;
                 }
 
@@ -32897,12 +32889,9 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
                 }
               }
 
-              V8o[2] = "executing";
               m8o[19] = i0u(V8o[0][0], V8o[0][1], V8o[0][2]);
 
               if (P1Y.g3V()[2][2][13][12] == P1Y.g3V()[1][13][8] && m8o[19].type === "normal") {
-                V8o[2] = V8o[0][2].done && P1Y.g3V()[10][3][4][12] != P1Y.l3V()[7][8][10] ? "completed" : "suspendedYield";
-
                 if (P1Y.l3V()[11][11][0] != P1Y.l3V()[9][5][8] || m8o[19].arg === D8o[600]) {
                   continue;
                 } else {
@@ -32913,7 +32902,6 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
                 }
               } else {
                 if (P1Y.g3V()[6][9][0] != P1Y.g3V()[6][6][9][8] || m8o[19].type === "throw") {
-                  V8o[2] = "completed";
                   V8o[0][2].method = "throw";
                   V8o[0][2].arg = m8o[19].arg;
                 }
@@ -32924,12 +32912,9 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
           } else {
             while (V8o[0][2].method === "next" && P1Y.g3V()[5][3][0] != P1Y.g3V()[6][12][0]) {
               V8o[0][2].sent = V8o[0][2]._sent = V8o[0][2].arg;
-              V8o[2] = "executing";
               m8o[19] = i0u(V8o[0][0], V8o[0][1], V8o[0][2]);
 
               if (P1Y.g3V()[2][2][13][12] == P1Y.g3V()[1][13][8] && m8o[19].type === "normal") {
-                V8o[2] = V8o[0][2].done && P1Y.g3V()[10][3][4][12] != P1Y.l3V()[7][8][10] ? "completed" : "suspendedYield";
-
                 if (P1Y.l3V()[11][11][0] != P1Y.l3V()[9][5][8] || m8o[19].arg === D8o[600]) {
                   continue;
                 } else {
@@ -32940,7 +32925,6 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
                 }
               } else {
                 if (P1Y.g3V()[6][9][0] != P1Y.g3V()[6][6][9][8] || m8o[19].type === "throw") {
-                  V8o[2] = "completed";
                   V8o[0][2].method = "throw";
                   V8o[0][2].arg = m8o[19].arg;
                 }
@@ -32950,8 +32934,7 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
             }
 
             if (P1Y.g3V()[1][3][4] != P1Y.l3V()[7][0][8][10] && V8o[0][2].method === "throw") {
-              if (P1Y.l3V()[11][12][6] != P1Y.g3V()[1][11][10] || V8o[2] === "suspendedStart") {
-                V8o[2] = "completed";
+              if (P1Y.l3V()[11][12][6] != P1Y.g3V()[1][11][10] || "completed" === "suspendedStart") {
                 throw V8o[0][2].arg;
               }
 
@@ -32962,12 +32945,9 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
               }
             }
 
-            V8o[2] = "executing";
             m8o[19] = i0u(V8o[0][0], V8o[0][1], V8o[0][2]);
 
             if (P1Y.g3V()[2][2][13][12] == P1Y.g3V()[1][13][8] && m8o[19].type === "normal") {
-              V8o[2] = V8o[0][2].done && P1Y.g3V()[10][3][4][12] != P1Y.l3V()[7][8][10] ? "completed" : "suspendedYield";
-
               if (P1Y.l3V()[11][11][0] != P1Y.l3V()[9][5][8] || m8o[19].arg === D8o[600]) {
                 continue;
               } else {
@@ -32978,7 +32958,6 @@ if (N5SS.g3V()[1][0] == N5SS.l3V()[12][10] && "inall" !== 83) {
               }
             } else {
               if (P1Y.g3V()[6][9][0] != P1Y.g3V()[6][6][9][8] || m8o[19].type === "throw") {
-                V8o[2] = "completed";
                 V8o[0][2].method = "throw";
                 V8o[0][2].arg = m8o[19].arg;
               }

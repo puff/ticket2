@@ -18,7 +18,7 @@ Routines in order:
   * We have this after flow because of the shifting done on the decoded string array. It is easier to follow the order of the shifts when control flow is restored
 * Variable Unmasking
   * This may need to be done multiple times to make the code readable.
-* String merging (TODO)
+* String joining (TODO)
   * https://docs.jscrambler.com/code-integrity/documentation/transformations/string-splitting
 * Beautify - Recover indentation and unescape hexadecimal & unicode encoded strings
 

@@ -278,8 +278,8 @@ traverse(ast, {
             // console.log(ev, val)
             if (types.isIdentifier(val.left) && val.left.name in constantMasks)
                 val = constantMasks[val.left.name] 
-            else
-                console.log(val)
+            // else
+            //     console.log(val)
         }
 
         // TODO: see notes in unshiftMap creation
@@ -290,13 +290,12 @@ traverse(ast, {
             fs.writeFileSync(`./samples/strings_decoded/strings_${unshiftCount}.json`, JSON.stringify(decodedStrings))
             unshiftCount++
         }
-          //console.log(val, decodedStrings[val])
-          if (typeof(decodedStrings[val]) != 'string') {
-            console.log(val)
-            return
-          }
-          path.replaceWith(types.stringLiteral(decodedStrings[val]))
-          decodedStringCount++;
+        //   if (typeof(decodedStrings[val]) != 'string') {
+        //     console.log(val)
+        //     return
+        //   }
+        path.replaceWith(types.stringLiteral(decodedStrings[val]))
+        decodedStringCount++;
       }  
     },
     StringLiteral(path) { // Revert hexadecimal strings
@@ -306,8 +305,8 @@ traverse(ast, {
 })
 console.log(`Decoded ${decodedStringCount} strings`.green)
 
-unmaskingStuff(true) // second iteration
-//unmaskingStuff(true) // last iteration
+unmaskingStuff(false) // second iteration
+unmaskingStuff(true) // last iteration
 
 console.log('Evaluating constants...'.cyan)
 traverse(ast, {
@@ -333,7 +332,7 @@ traverse(ast, {
     }
 })
 
-// TODO: String merging (https://docs.jscrambler.com/code-integrity/documentation/transformations/string-splitting)
+// TODO: String joining (https://docs.jscrambler.com/code-integrity/documentation/transformations/string-splitting)
 
 console.log('Beautifying...'.cyan)
 traverse(ast, {
@@ -345,7 +344,7 @@ traverse(ast, {
 })
 
 let code = generate(ast, {}, source).code
-//code = beautify(code, {indent_size: 2, space_in_empty_paren: true})
+// code = beautify(code, {indent_size: 2, space_in_empty_paren: true})
 
 console.log(`Finished routines! Total time taken: ${Date.now() - beginTime}ms`.brightYellow)
 
