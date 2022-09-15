@@ -27,8 +27,9 @@ const colors = require('colors'),
 // https://stackoverflow.com/a/175787
 function isNumeric(str) {
     if (typeof str != "string") return false // we only process strings!  
-    return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
-           !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+    return !isNaN(str)
+    // return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+    //        !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
   }
 
 function getMaskHolders(ast, removeRedundant) {
@@ -39,13 +40,15 @@ function getMaskHolders(ast, removeRedundant) {
     traverse(ast, {
         VariableDeclarator(path) {
             const node = path.node
+            if (!types.isStringLiteral(node.init) && !types.isNumericLiteral(node.init))
+                return
 
-            if ((types.isStringLiteral(node.init) && !isNumeric(node.init.value)) || !types.isNumericLiteral(node.init))
+            if (types.isStringLiteral(node.init) && !isNumeric(node.init.value))
                 return
             
             // if (node.id.name in constantMasks)
             //     console.log(node.id.name)
-            constantMasks[node.id.name] = node.init.value
+            constantMasks[node.id.name] = parseInt(node.init.value)
             if (removeRedundant) path.remove()
         },
         AssignmentExpression(path) {

@@ -35,9 +35,12 @@ function unmaskingStuff(removeRedundant)
     let { maskHolders, constantMasks } = maskFunctions.getMaskHolders(ast, removeRedundant)
     // console.log(maskHolders, constantMasks)
     maskFunctions.unmask(ast, maskHolders, constantMasks, removeRedundant)
+
+    return { maskHolders, constantMasks }
 }
 
-unmaskingStuff(false)
+let { maskHolders, constantMasks } = unmaskingStuff(false)
+// console.log(maskHolders, constantMasks)
 
 console.log('Finding string decode function and its resolver functions...'.cyan)
 traverse(ast, {
@@ -229,14 +232,55 @@ console.log('Replacing obfuscated strings...'.cyan)
 traverse(ast, {
     CallExpression(path) {
       if (types.isMemberExpression(path.node.callee) && stringResolvers.includes(path.node.callee.property.name) /* && path.node.arguments.length > 0 */) {
-          //console.log(path.node.callee.property.name)
-          let val = path.node.arguments[0].value
-          if (val === undefined) {
-              //console.log(path.node)
-              return
-          }
-          else if (typeof val === 'string')
-            val = parseInt(val)
+          
+        //console.log(path.node.callee.property.name)
+        let val = path.node.arguments[0]
+        if (val === undefined)
+            return
+        else if (types.isNumericLiteral(val))
+            val = val.value
+        else if (types.isStringLiteral(val))
+            val = parseInt(val.value)
+        else if (types.isIdentifier(val)) {
+            if (val.name in constantMasks) {
+                // console.log(val.name)
+                val = constantMasks[val.name]
+            }
+        }
+        else if (types.isUnaryExpression(val)) {
+            if (!types.isIdentifier(val.argument))
+                return
+        
+            if (val.argument.name in constantMasks) {
+                // console.log(val)
+                val = val.operator === '+' ? constantMasks[val.argument.name] : -constantMasks[val.argument.name]
+            }
+        }
+        else if (types.isBinaryExpression(val)) {
+            // let left = val.left,
+            //     right = val.right
+            
+            // if (types.isIdentifier(left) && left.name in constantMasks)
+            //     left = constantMasks[left.name]
+            // else
+            //     left = left.value
+
+            // if (types.isIdentifier(right) && right.name in constantMasks)
+            //     right = constantMasks[right.name]
+            // else
+            //     right = right.value
+
+            // if (left == undefined)
+            //     console.log(val)
+
+            // let ev = `${left} ${val.operator} ${right}`
+            // val = eval(ev)
+            // console.log(ev, val)
+            if (types.isIdentifier(val.left) && val.left.name in constantMasks)
+                val = constantMasks[val.left.name] 
+            else
+                console.log(val)
+        }
 
         // TODO: see notes in unshiftMap creation
         let unshift = unshiftMap[unshiftCount]
@@ -247,6 +291,10 @@ traverse(ast, {
             unshiftCount++
         }
           //console.log(val, decodedStrings[val])
+          if (typeof(decodedStrings[val]) != 'string') {
+            console.log(val)
+            return
+          }
           path.replaceWith(types.stringLiteral(decodedStrings[val]))
           decodedStringCount++;
       }  
@@ -259,6 +307,7 @@ traverse(ast, {
 console.log(`Decoded ${decodedStringCount} strings`.green)
 
 unmaskingStuff(true) // second iteration
+//unmaskingStuff(true) // last iteration
 
 console.log('Evaluating constants...'.cyan)
 traverse(ast, {
