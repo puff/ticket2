@@ -1,4 +1,10 @@
 [35mLoading files and parsing ast...[39m
+[36mFinding string decode function and its resolver functions...[39m
+[32mString Decode Function | Object: N5SS Property: 354277 Function: k0F[39m
+[32mString Resolver Functions | x0F,n0F[39m
+[36mDecoding string array...[39m
+[36mCreating un-shift map for decoded strings...[39m
+[36mEvaluating constants...[39m
 Unmasking
 {
   N4H: { '3': 'op', '8': 'erty', '9': 'definePr' },
@@ -3093,12 +3099,6 @@ Unmasking
   z7f: 175,
   c5f: 930
 }
-[36mFinding string decode function and its resolver functions...[39m
-[32mString Decode Function | Object: N5SS Property: 354277 Function: k0F[39m
-[32mString Resolver Functions | x0F,n0F[39m
-[36mDecoding string array...[39m
-[36mCreating un-shift map for decoded strings...[39m
-[36mEvaluating constants...[39m
 [36mReplacing obfuscated strings...[39m
 [32mUnshifted decoded strings array #0[39m
 [32mUnshifted decoded strings array #1[39m
@@ -3108,54 +3108,18 @@ Unmasking
 [32mUnshifted decoded strings array #5[39m
 [32mUnshifted decoded strings array #6[39m
 [32mUnshifted decoded strings array #7[39m
-Node {
-  type: 'BinaryExpression',
-  start: 2656454,
-  end: 2656461,
-  loc: SourceLocation {
-    start: Position { line: 46558, column: 54 },
-    end: Position { line: 46558, column: 61 },
-    filename: undefined,
-    identifierName: undefined
-  },
-  range: undefined,
-  leadingComments: undefined,
-  trailingComments: undefined,
-  innerComments: undefined,
-  extra: undefined,
-  left: Node {
-    type: 'Identifier',
-    start: 2656454,
-    end: 2656457,
-    loc: SourceLocation {
-      start: [Position],
-      end: [Position],
-      filename: undefined,
-      identifierName: 'x9P'
-    },
-    range: undefined,
-    leadingComments: undefined,
-    trailingComments: undefined,
-    innerComments: undefined,
-    extra: undefined,
-    name: 'x9P'
-  },
-  operator: '-',
-  right: Node {
-    type: 'NumericLiteral',
-    start: 2656460,
-    end: 2656461,
-    loc: SourceLocation {
-      start: [Position],
-      end: [Position],
-      filename: undefined,
-      identifierName: undefined
-    },
-    range: undefined,
-    leadingComments: undefined,
-    trailingComments: undefined,
-    innerComments: undefined,
-    extra: { rawValue: 0, raw: '0' },
-    value: 0
-  }
-}
+x7V
+h7V
+Y7V
+t6V
+V4V
+h6V
+O6V
+o8V
+o8V
+[32mDecoded 22103 strings[39m
+[36mEvaluating constants...[39m
+[36mBeautifying...[39m
+[93mFinished routines! Total time taken: 6595ms[39m
+[35mSaving cleaned file...[39m
+[35mDone! Happy reversing :)[39m

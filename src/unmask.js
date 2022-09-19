@@ -36,8 +36,10 @@ function getMaskHolders(ast, removeRedundant) {
     let maskHolders = {},
         constantMasks = {}
 
-    // TODO: make this identify mask holders by if they equal [arguments], like the docs on jscrambler show
+    // TODO: Make this identify mask holders by if they equal [arguments], like the docs on jscrambler show
+    //       In the future, JScrambler may use strings as indexes (I hope not). If they do, fix this :)
     traverse(ast, {
+        // These are only used in the MemberExpression masks and string decoding
         VariableDeclarator(path) {
             const node = path.node
             if (!types.isStringLiteral(node.init) && !types.isNumericLiteral(node.init))
@@ -45,17 +47,18 @@ function getMaskHolders(ast, removeRedundant) {
 
             if (types.isStringLiteral(node.init) && !isNumeric(node.init.value))
                 return
-            
+
             // if (node.id.name in constantMasks)
             //     console.log(node.id.name)
             constantMasks[node.id.name] = parseInt(node.init.value)
-            if (removeRedundant) path.remove()
+            // if (removeRedundant) path.remove()
         },
         AssignmentExpression(path) {
             const node = path.node
 
             // this will only work properly if the variable is not used before setting it to a new one (see o8V in sample)
-            if (types.isIdentifier(node.left) && node.left.name in constantMasks && (types.isNumericLiteral(node.right) || 
+            if (types.isIdentifier(node.left) && node.left.name in constantMasks && 
+                node.operator === '=' && (types.isNumericLiteral(node.right) || 
                 (types.isStringLiteral(node.right) && isNumeric(node.right.value)))) {
                 constantMasks[node.left.name] = node.right.value
                 if (removeRedundant) path.remove()
@@ -113,7 +116,7 @@ function getMaskHolders(ast, removeRedundant) {
     return { maskHolders, constantMasks }
 }
 
-function unmask(ast, maskHolders, constantMasks, removeRedundant) {
+function unmask(ast, maskHolders, constantMasks, stringResolvers, removeRedundant) {
     traverse(ast, {
         MemberExpression(path) {
             const node = path.node,
@@ -159,7 +162,6 @@ function unmask(ast, maskHolders, constantMasks, removeRedundant) {
                     (types.isIdentifier(expression.left.property) && expression.left.property.name == keyName) || 
                     (types.isNumericLiteral(expression.left.property) && expression.left.property.value == keyName))) {
                         if (removeRedundant) prev.remove() // remove redudant expressions, only use on subsequent unmasks
-                        //console.log(expression.left.object.name, keyName)
                         return
                 }
                 else if (types.isUpdateExpression(expression) && types.isMemberExpression(expression.argument) &&
@@ -169,7 +171,49 @@ function unmask(ast, maskHolders, constantMasks, removeRedundant) {
                         return
                 }
 
-                path.replaceWith(types.valueToNode(maskHolders[node.object.name][keyName]))
+                // only replace for string decoding
+                if (stringResolvers.length > 0) {
+                    if (types.isCallExpression(path.parent) && types.isMemberExpression(path.parent.callee) &&
+                        types.isIdentifier(path.parent.callee.property) && stringResolvers.includes(path.parent.callee.property.name))
+                            path.replaceWith(types.valueToNode(maskHolders[node.object.name][keyName]))
+                    else if (types.isBinaryExpression(path.parentPath) && types.isCallExpression(path.parentPath.parent) &&
+                            types.isIdentifier(path.parentPath.parent.callee.property) && 
+                            stringResolvers.includes(path.parentPath.parent.callee.property.name)) {
+                                // console.log(node.object.name, keyName)
+                                path.replaceWith(types.valueToNode(maskHolders[node.object.name][keyName]))
+                    }
+                } 
+                else {
+                    path.replaceWith(types.valueToNode(maskHolders[node.object.name][keyName]))
+                }
+                
+            }
+        }
+    })
+}
+
+function evalConstants(ast)
+{
+    console.log('Evaluating constants...'.cyan)
+    traverse(ast, {
+        BinaryExpression(path) {
+            let code = generate(path.node).code
+            if (/[a-zA-Z]/.test(code))
+                return
+            
+            let evaluated = eval(code)
+            if (evaluated != undefined)
+                path.replaceWith(types.valueToNode(evaluated))
+        },
+        UnaryExpression(path) {
+            if (types.isStringLiteral(path.node.argument)) {
+                if (path.node.operator === '+')
+                    path.replaceWith(types.NumericLiteral(parseInt(path.node.argument.value)))
+                
+            } else if (types.isUnaryExpression(path.node.argument)) {
+                if (path.node.operator === '-' && path.node.argument.operator === '+') {
+                    path.replaceWith(types.NumericLiteral(-parseInt(path.node.argument.argument.value)))
+                }
             }
         }
     })
@@ -177,7 +221,8 @@ function unmask(ast, maskHolders, constantMasks, removeRedundant) {
 
 module.exports = {
     getMaskHolders,
-    unmask
+    unmask,
+    evalConstants
 }
 
 // console.log('Unmasking...'.cyan)

@@ -7,7 +7,8 @@ const colors = require('colors'),
     types = require('@babel/types'),
     path = require('path'),
     fs = require('fs'),
-    beautify = require('js-beautify')
+    beautify = require('js-beautify'),
+    maskFunctions = require('./unmask')
 
 const filePath = path.resolve(process.argv[2]),
     outputFilePath = filePath.replace('.js', '-cleaned.js'),
@@ -28,19 +29,15 @@ let stringObject, stringProperty, stringFunction, stringArrayInitString, stringA
 
 // TODO: Unmask evals (partially done in pooky)
 
-function unmaskingStuff(removeRedundant)
+function unmaskingStuff(stringResolvers, removeRedundant)
 {
     console.log("Unmasking")
-    const maskFunctions = require('./unmask')
-    let { maskHolders, constantMasks } = maskFunctions.getMaskHolders(ast, removeRedundant)
+    let { maskHolders, constantMasks } = maskFunctions.getMaskHolders(ast, stringResolvers, removeRedundant)
     // console.log(maskHolders, constantMasks)
-    maskFunctions.unmask(ast, maskHolders, constantMasks, removeRedundant)
+    maskFunctions.unmask(ast, maskHolders, constantMasks, stringResolvers, removeRedundant)
 
     return { maskHolders, constantMasks }
 }
-
-let { maskHolders, constantMasks } = unmaskingStuff(false)
-// console.log(maskHolders, constantMasks)
 
 console.log('Finding string decode function and its resolver functions...'.cyan)
 traverse(ast, {
@@ -202,29 +199,11 @@ traverse(ast, {
 
 // TODO: replace globalThis calls with window (ex: var d7D = d4ss.K5P; d7D.String.charCodeAt())
 
-console.log('Evaluating constants...'.cyan)
-traverse(ast, {
-    BinaryExpression(path) {
-        let code = generate(path.node).code
-        if (/[a-zA-Z]/.test(code))
-            return
-        
-        let evaluated = eval(code)
-        if (evaluated != undefined)
-            path.replaceWith(types.valueToNode(evaluated))
-    },
-    UnaryExpression(path) {
-        if (types.isStringLiteral(path.node.argument)) {
-            if (path.node.operator === '+')
-                path.replaceWith(types.NumericLiteral(parseInt(path.node.argument.value)))
-            
-        } else if (types.isUnaryExpression(path.node.argument)) {
-            if (path.node.operator === '-' && path.node.argument.operator === '+') {
-                path.replaceWith(types.NumericLiteral(-parseInt(path.node.argument.argument.value)))
-            }
-        }
-    }
-})
+
+// unmaskingStuff(false)
+let { maskHolders, constantMasks } = unmaskingStuff(stringResolvers, false)
+// console.log(maskHolders, constantMasks)
+maskFunctions.evalConstants(ast)
 
 let decodedStringCount = 0,
     unshiftCount = 0
@@ -248,13 +227,18 @@ traverse(ast, {
             }
         }
         else if (types.isUnaryExpression(val)) {
-            if (!types.isIdentifier(val.argument))
-                return
-        
-            if (val.argument.name in constantMasks) {
-                // console.log(val)
+            if (types.isIdentifier(val.argument) && val.argument.name in constantMasks) {
                 val = val.operator === '+' ? constantMasks[val.argument.name] : -constantMasks[val.argument.name]
             }
+            else if (types.isMemberExpression(val.argument) && val.argument.object.name in maskHolders) {
+                if (types.isNumericLiteral(val.argument.property) || (types.isStringLiteral(val.argument.property) && isNumeric(val.argument.property)))
+                    val = maskHolders[val.argument.object.name][parseInt(val.argument.property.value)]
+                else if (types.isIdentifier(val.argument.property) && val.argument.property in constantMasks) {
+                    val = maskHolders[val.argument.object.name][constantMasks[parseInt(val.argument.property.value)]]
+                }
+            }
+            // else
+            //     console.log(val)
         }
         else if (types.isBinaryExpression(val)) {
             // let left = val.left,
@@ -278,6 +262,13 @@ traverse(ast, {
             // console.log(ev, val)
             if (types.isIdentifier(val.left) && val.left.name in constantMasks)
                 val = constantMasks[val.left.name] 
+            else if (types.isMemberExpression(val.left) && val.left.object.name in maskHolders) {
+                if (types.isNumericLiteral(val.left.property) || (types.isStringLiteral(val.left.property) && isNumeric(val.left.property)))
+                    val = maskHolders[val.left.object.name][parseInt(val.left.property.value)]
+                else if (types.isIdentifier(val.left.property) && val.left.property in constantMasks) {
+                    val = maskHolders[val.left.object.name][constantMasks[parseInt(val.left.property.value)]]
+                }
+            }
             // else
             //     console.log(val)
         }
@@ -290,10 +281,10 @@ traverse(ast, {
             fs.writeFileSync(`./samples/strings_decoded/strings_${unshiftCount}.json`, JSON.stringify(decodedStrings))
             unshiftCount++
         }
-        //   if (typeof(decodedStrings[val]) != 'string') {
-        //     console.log(val)
-        //     return
-        //   }
+          if (typeof(decodedStrings[val]) != 'string') {
+            // console.log(val)
+            return
+          }
         path.replaceWith(types.stringLiteral(decodedStrings[val]))
         decodedStringCount++;
       }  
@@ -305,8 +296,9 @@ traverse(ast, {
 })
 console.log(`Decoded ${decodedStringCount} strings`.green)
 
-unmaskingStuff(false) // second iteration
-unmaskingStuff(true) // last iteration
+unmaskingStuff([], false) // second iteration
+unmaskingStuff([], true) // last iteration
+maskFunctions.evalConstants(ast)
 
 console.log('Evaluating constants...'.cyan)
 traverse(ast, {

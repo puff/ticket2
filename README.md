@@ -7,10 +7,10 @@ The tools in this repo attempt to handle converting control flow states to a for
 A modified version of pinyugi's tool handles unflattening the control flow, unmasking / decoding xor'd evals, and other various things.
 
 Routines in order:
+* Decode / unmask evals
 * Convert flow state format for use in pinyugi's tool
 * Control Flow Unflattening
   * https://docs.jscrambler.com/code-integrity/tutorials/control-flow-flattening
-* Decode / unmask evals
 * Variable Unmasking
   * https://docs.jscrambler.com/code-integrity/documentation/transformations/variable-masking
 * String Unconcealing 
