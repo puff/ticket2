@@ -22,7 +22,4 @@ Routines in order:
   * https://docs.jscrambler.com/code-integrity/documentation/transformations/string-splitting
 * Beautify - Recover indentation and unescape hexadecimal & unicode encoded strings
 
-A possible issue with restoring control flow first could result in the shift
-function being improperly unflattened, or breaking the flow in a
-way that breaks our code. It may be worth it to just follow the flow
-of the shift function in the string unconcealing routine.
+Variable Unmasking is a little buggy. It removes some variables incremented in loops which are not used for masking.
